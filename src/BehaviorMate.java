@@ -34,6 +34,7 @@ import org.json.JSONArray;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 
 import java.lang.NumberFormatException;
 import org.json.JSONException;
@@ -45,6 +46,102 @@ import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.core.PApplet;
 import processing.core.PSurface;
 
+
+/**
+ * Used to create a panel containing a label with a text field and button below it. This is
+ * used for changing the trial length and number of reward zones.
+ */
+class LabeledTextFieldButton extends JPanel {
+    /**
+     * Number field for entering values
+     */
+    private JTextField textField;
+    private JButton button;
+
+    /**
+     *
+     * @param text The text of the label above the text field.
+     * @param value The default text of the text field.
+     * @param width The width of the text field.
+     */
+    public LabeledTextFieldButton(String text, String value, int width) {
+        super(new BorderLayout());
+        JLabel label = new JLabel(text);
+        this.textField = new JTextField(value, width);
+        add(label, BorderLayout.NORTH);
+        JPanel text_container2 = new JPanel(new FlowLayout());
+        text_container2.add(textField);
+        add(text_container2, BorderLayout.CENTER);
+        this.button = new JButton("Set");
+        // add listener
+        add(button, BorderLayout.EAST);
+    }
+
+    /**
+     * Constructs a LabeledTextField with a blank text field.
+     *
+     * @param text The text of the label above the text field.
+     * @param width The width of the text field.
+     */
+    public LabeledTextFieldButton(String text, int width) {
+        this(text, "", width);
+    }
+
+    /**
+     * Used to enable or disable the text field.
+     *
+     * @param enabled Pass <code>true</code> to enable the text field and
+     *                <code>false</code> to disable it.
+     */
+    public void setEnabled(boolean enabled) {
+        this.textField.setEnabled(enabled);
+    }
+
+    /**
+     *
+     * @return The text of the text field.
+     */
+    public String getText() {
+        return this.textField.getText();
+    }
+
+    /**
+     * Sets the text of the text field.
+     *
+     * @param text The new text of the text field.
+     */
+    public void setText(String text) {
+        this.textField.setText(text);
+    }
+
+    /* get Button */
+    public JButton getButton() {
+        return this.button;
+    }
+
+    /**
+     *
+     * @return The integer written in the text field by the user if it is a
+     *         valid integer.
+     */
+    public int getInt() {
+        try {
+            return Integer.parseInt(this.getText());
+        } catch (NumberFormatException e) {
+            System.out.println(e.toString());
+        }
+        return 0;
+    }
+
+    /**
+     * Add an action listener to the button.
+     *
+     * @param listener The listener to add to the button.
+     */
+    public void addActionListener(ActionListener listener) {
+        this.button.addActionListener(listener);
+    }
+}
 
 /**
  * Used to create a panel containing a label with a text field below it. This is
@@ -716,6 +813,8 @@ class ControlPanel extends JPanel implements ActionListener {
     private LabeledTextField mouseNameBox;
     private LabeledTextField experimentGroupBox;
     private ValveTestForm valveTestForm;
+    private LabeledTextFieldButton trialLengthBox;
+    private LabeledTextFieldButton rewardNumberBox;
     private CalibrateBeltForm calibrateBeltForm;
     private JButton showAttrsButton;
     private JButton refreshButton;
@@ -748,19 +847,27 @@ class ControlPanel extends JPanel implements ActionListener {
         mouseNameBox = new LabeledTextField("Mouse Name", 14);
         add(mouseNameBox);
 
-        add(Box.createVerticalStrut(25));
+        add(Box.createVerticalStrut(10));
 
         calibrateBeltForm = new CalibrateBeltForm(treadmillController);
         calibrateBeltForm.setPreferredSize(new Dimension(200, 100));
         add(calibrateBeltForm);
 
-        add(Box.createVerticalStrut(25));
+        add(Box.createVerticalStrut(10));
 
         valveTestForm = new ValveTestForm(treadmillController);
         valveTestForm.setPreferredSize(new Dimension(200, 250));
         add(valveTestForm);
 
-        add(Box.createVerticalStrut(50));
+        add(Box.createVerticalStrut(10));
+
+        trialLengthBox = new LabeledTextFieldButton("Trial Length (s)", 4);
+        trialLengthBox.addActionListener(this);
+        add(trialLengthBox);
+
+        rewardNumberBox = new LabeledTextFieldButton("Num Reward zones", 4);
+        rewardNumberBox.addActionListener(this);
+        add(rewardNumberBox);
 
         JPanel buttonPanel = new JPanel(new GridLayout(0,1));
         showAttrsButton= new JButton("Edit Trial Attributes");
@@ -1021,6 +1128,113 @@ class ControlPanel extends JPanel implements ActionListener {
     }
 
     /**
+     * Update trial length of the treadmill controller.
+     */
+    public void updateTrialLength(int length) {
+        // Change trial length immediately
+        this.treadmillController.trial_duration = length;
+        this.treadmillController.display.setTotalTime(length);
+
+        // Update Setting File
+        try {
+            // Read JSON file
+            String filename = settingsLoader.getSelectedFile();
+
+            File file = new File(filename);
+
+            StringBuilder content = new StringBuilder();
+
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+
+            // Replace the value of "locations"
+            // Find the "locations" key and its value
+            String oldValue = "\"trial_length\":";
+            int index = content.indexOf(oldValue);
+
+            if (index != -1) {
+                // Find the start and end of the value
+                int startIndex = index + oldValue.length();
+                int endIndex = content.indexOf(",", startIndex); // assuming "locations" is followed by a comma
+
+                // Replace the old value with the new number
+                String newContent = content.substring(0, startIndex) + length + content.substring(endIndex);
+
+                // Step 3: Save the modified content back to the file
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write(newContent);
+                }
+                System.out.println("Successfully updated 'trial_length' in the JSON file.");
+            } else {
+                System.err.println("'trial_length' key not found in the file.");
+            }
+
+            // Reload the trial setting
+            refreshSettings();
+
+        }
+        catch (Exception e) {
+            String message = "Error: " + e.getMessage();
+            JOptionPane.showMessageDialog(null, message);
+        }
+    }
+
+    /**
+     * Update reward number of the treadmill controller.
+     */
+    public void updateRewardNumber(int number) {
+        try {
+            // Read JSON file
+            String filename = settingsLoader.getSelectedFile();
+
+            File file = new File(filename);
+
+            StringBuilder content = new StringBuilder();
+
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+
+            // Replace the value of "locations"
+            // Find the "locations" key and its value
+            String oldValue = "\"locations\":";
+            int index = content.indexOf(oldValue);
+
+            if (index != -1) {
+                // Find the start and end of the value
+                int startIndex = index + oldValue.length();
+                int endIndex = content.indexOf(",", startIndex); // assuming "locations" is followed by a comma
+
+                // Replace the old value with the new number
+                String newContent = content.substring(0, startIndex) + number + content.substring(endIndex);
+
+                // Step 3: Save the modified content back to the file
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write(newContent);
+                }
+                System.out.println("Successfully updated 'locations' in the JSON file.");
+            } else {
+                System.err.println("'locations' key not found in the file.");
+            }
+
+            // Reload the trial setting
+            refreshSettings();
+
+        }
+        catch (Exception e) {
+            String message = "Error: " + e.getMessage();
+            JOptionPane.showMessageDialog(null, message);
+        }
+
+    }
+
+
+    /**
      * Implements the ActionListener interface.
      *
      * @param e ActionEvent to respond to.
@@ -1040,6 +1254,10 @@ class ControlPanel extends JPanel implements ActionListener {
             updateAttrs();
         } else if (e.getSource() == restartCommButton) {
             treadmillController.resetComms();
+        } else if (e.getSource() == trialLengthBox.getButton()) {
+            updateTrialLength(trialLengthBox.getInt());
+        } else if (e.getSource() == rewardNumberBox.getButton()) {
+            updateRewardNumber(rewardNumberBox.getInt());
         }
     }
 }
