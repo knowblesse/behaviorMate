@@ -815,6 +815,9 @@ class ControlPanel extends JPanel implements ActionListener {
     private ValveTestForm valveTestForm;
     private LabeledTextFieldButton trialLengthBox;
     private LabeledTextFieldButton rewardNumberBox;
+    private LabeledTextField dayBox;
+    private LabeledTextField experimentTypeBox;
+    private JButton updateExpInfoButton;
     private CalibrateBeltForm calibrateBeltForm;
     private JButton showAttrsButton;
     private JButton refreshButton;
@@ -843,20 +846,31 @@ class ControlPanel extends JPanel implements ActionListener {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         experimentGroupBox = new LabeledTextField("Project Name", 14);
+        experimentGroupBox.setText("test");
         add(experimentGroupBox);
         mouseNameBox = new LabeledTextField("Mouse Name", 14);
+        mouseNameBox.setText("test01");
         add(mouseNameBox);
+        experimentTypeBox = new LabeledTextField("Experiment Type", 14);
+        add(experimentTypeBox);
+        dayBox = new LabeledTextField("Day", 14);
+        add(dayBox);
+        updateExpInfoButton = new JButton("Update Info");
+        // Change size of the button
+        updateExpInfoButton.setPreferredSize(new Dimension(300, 50));
+        updateExpInfoButton.setAlignmentX(CENTER_ALIGNMENT);
+        add(updateExpInfoButton);
 
         add(Box.createVerticalStrut(10));
 
         calibrateBeltForm = new CalibrateBeltForm(treadmillController);
-        calibrateBeltForm.setPreferredSize(new Dimension(200, 100));
+        calibrateBeltForm.setPreferredSize(new Dimension(400, 100));
         add(calibrateBeltForm);
 
         add(Box.createVerticalStrut(10));
 
         valveTestForm = new ValveTestForm(treadmillController);
-        valveTestForm.setPreferredSize(new Dimension(200, 250));
+        valveTestForm.setPreferredSize(new Dimension(400, 250));
         add(valveTestForm);
 
         add(Box.createVerticalStrut(10));
@@ -962,6 +976,8 @@ class ControlPanel extends JPanel implements ActionListener {
             showAttrsButton.setEnabled(false);
             calibrateBeltForm.setEnabled(false);
             startButton.setText("Stop");
+            rewardNumberBox.setEnabled(false);
+
         } else {
             startButton.setText("Start");
             mouseNameBox.setEnabled(true);
@@ -970,6 +986,7 @@ class ControlPanel extends JPanel implements ActionListener {
             showAttrsButton.setEnabled(true);
             refreshButton.setEnabled(true);
             calibrateBeltForm.setEnabled(true);
+            rewardNumberBox.setEnabled(true);
         }
     }
 
@@ -1128,6 +1145,57 @@ class ControlPanel extends JPanel implements ActionListener {
     }
 
     /**
+     * Update xml file
+     */
+    public void updateJson(String key, String value){
+        try {
+            // Read JSON file
+            String filename = settingsLoader.getSelectedFile();
+
+            File file = new File(filename);
+
+            StringBuilder content = new StringBuilder();
+
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+
+            // Replace the value of "locations"
+            // Find the "locations" key and its value
+            String oldValue = "\"" + key + "\":";
+            int index = content.indexOf(oldValue);
+
+            if (index != -1) {
+                // Find the start and end of the value
+                int startIndex = index + oldValue.length();
+                int endIndex = content.indexOf(",", startIndex); // assuming "locations" is followed by a comma
+
+                // Replace the old value with the new number
+                String newContent = content.substring(0, startIndex) + value + content.substring(endIndex);
+
+                // Step 3: Save the modified content back to the file
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write(newContent);
+                }
+                System.out.println("Successfully updated \"" + key + "\" in the JSON file.");
+            } else {
+                System.err.println("\"" + key + "\" key not found in the file.");
+            }
+
+            // Reload the trial setting
+            refreshSettings();
+
+        }
+        catch (Exception e) {
+            String message = "Error: " + e.getMessage();
+            JOptionPane.showMessageDialog(null, message);
+        }
+    }
+
+
+    /**
      * Update trial length of the treadmill controller.
      */
     public void updateTrialLength(int length) {
@@ -1135,104 +1203,26 @@ class ControlPanel extends JPanel implements ActionListener {
         this.treadmillController.trial_duration = length;
         this.treadmillController.display.setTotalTime(length);
 
-        // Update Setting File
-        try {
-            // Read JSON file
-            String filename = settingsLoader.getSelectedFile();
+        // Update JSON file
+        updateJson("trial_length", Integer.toString(length));
 
-            File file = new File(filename);
-
-            StringBuilder content = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append(System.lineSeparator());
-            }
-
-            // Replace the value of "locations"
-            // Find the "locations" key and its value
-            String oldValue = "\"trial_length\":";
-            int index = content.indexOf(oldValue);
-
-            if (index != -1) {
-                // Find the start and end of the value
-                int startIndex = index + oldValue.length();
-                int endIndex = content.indexOf(",", startIndex); // assuming "locations" is followed by a comma
-
-                // Replace the old value with the new number
-                String newContent = content.substring(0, startIndex) + length + content.substring(endIndex);
-
-                // Step 3: Save the modified content back to the file
-                try (FileWriter writer = new FileWriter(file)) {
-                    writer.write(newContent);
-                }
-                System.out.println("Successfully updated 'trial_length' in the JSON file.");
-            } else {
-                System.err.println("'trial_length' key not found in the file.");
-            }
-
-            // Reload the trial setting
-            refreshSettings();
-
-        }
-        catch (Exception e) {
-            String message = "Error: " + e.getMessage();
-            JOptionPane.showMessageDialog(null, message);
-        }
     }
 
     /**
      * Update reward number of the treadmill controller.
      */
     public void updateRewardNumber(int number) {
-        try {
-            // Read JSON file
-            String filename = settingsLoader.getSelectedFile();
-
-            File file = new File(filename);
-
-            StringBuilder content = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append(System.lineSeparator());
-            }
-
-            // Replace the value of "locations"
-            // Find the "locations" key and its value
-            String oldValue = "\"locations\":";
-            int index = content.indexOf(oldValue);
-
-            if (index != -1) {
-                // Find the start and end of the value
-                int startIndex = index + oldValue.length();
-                int endIndex = content.indexOf(",", startIndex); // assuming "locations" is followed by a comma
-
-                // Replace the old value with the new number
-                String newContent = content.substring(0, startIndex) + number + content.substring(endIndex);
-
-                // Step 3: Save the modified content back to the file
-                try (FileWriter writer = new FileWriter(file)) {
-                    writer.write(newContent);
-                }
-                System.out.println("Successfully updated 'locations' in the JSON file.");
-            } else {
-                System.err.println("'locations' key not found in the file.");
-            }
-
-            // Reload the trial setting
-            refreshSettings();
-
-        }
-        catch (Exception e) {
-            String message = "Error: " + e.getMessage();
-            JOptionPane.showMessageDialog(null, message);
-        }
-
+        // Update Json file
+        updateJson("locations", Integer.toString(number));
     }
 
+    /**
+     * Update Day and Experiment Type Info
+     */
+    public void updateExpInfo(String experimentType, String day) {
+        updateJson("experiment_type", "\"" + experimentType + "\"");
+        updateJson("day", "\"" + day + "\"");
+    }
 
     /**
      * Implements the ActionListener interface.
@@ -1258,6 +1248,8 @@ class ControlPanel extends JPanel implements ActionListener {
             updateTrialLength(trialLengthBox.getInt());
         } else if (e.getSource() == rewardNumberBox.getButton()) {
             updateRewardNumber(rewardNumberBox.getInt());
+        } else if (e.getSource() == updateExpInfoButton) {
+            updateExpInfo(experimentTypeBox.getText(), dayBox.getText());
         }
     }
 }
@@ -1645,7 +1637,7 @@ public class BehaviorMate {
 
         SmoothCanvas smoothCanvas = (SmoothCanvas)ps.getNative();
         container.add(smoothCanvas);
-        container.setSize(800, 600);
+        container.setSize(850, 600);
         frame_container.add(container, BorderLayout.EAST);
 
         CommentsBox commentsBox = new CommentsBox(treadmillController);
@@ -1655,7 +1647,7 @@ public class BehaviorMate {
         frame.add(frame_container);
 
         frame.pack();
-        frame.setSize(800, 700);
+        frame.setSize(800, 800);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 

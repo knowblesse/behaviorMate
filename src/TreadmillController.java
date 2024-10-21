@@ -1616,6 +1616,7 @@ public class TreadmillController extends PApplet {
             return;
         }
 
+        // JJ: DEBUG MODE START #############
         for (int i=0; ((i < 10) && (behavior_comm.receiveMessage(json_buffer)));
                 i++) {
 
