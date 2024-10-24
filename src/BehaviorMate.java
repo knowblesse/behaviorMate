@@ -859,6 +859,7 @@ class ControlPanel extends JPanel implements ActionListener {
         // Change size of the button
         updateExpInfoButton.setPreferredSize(new Dimension(300, 50));
         updateExpInfoButton.setAlignmentX(CENTER_ALIGNMENT);
+        updateExpInfoButton.addActionListener(this);
         add(updateExpInfoButton);
 
         add(Box.createVerticalStrut(10));
@@ -977,7 +978,9 @@ class ControlPanel extends JPanel implements ActionListener {
             calibrateBeltForm.setEnabled(false);
             startButton.setText("Stop");
             rewardNumberBox.setEnabled(false);
-
+            rewardNumberBox.getButton().setEnabled(false);
+            trialLengthBox.setEnabled(false);
+            trialLengthBox.getButton().setEnabled(false);
         } else {
             startButton.setText("Start");
             mouseNameBox.setEnabled(true);
@@ -987,6 +990,9 @@ class ControlPanel extends JPanel implements ActionListener {
             refreshButton.setEnabled(true);
             calibrateBeltForm.setEnabled(true);
             rewardNumberBox.setEnabled(true);
+            rewardNumberBox.getButton().setEnabled(true);
+            trialLengthBox.setEnabled(true);
+            trialLengthBox.getButton().setEnabled(true);
         }
     }
 
@@ -1220,7 +1226,7 @@ class ControlPanel extends JPanel implements ActionListener {
      * Update Day and Experiment Type Info
      */
     public void updateExpInfo(String experimentType, String day) {
-        updateJson("experiment_type", "\"" + experimentType + "\"");
+        updateJson("experimentType", "\"" + experimentType + "\"");
         updateJson("day", "\"" + day + "\"");
     }
 
