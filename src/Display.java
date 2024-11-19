@@ -200,8 +200,8 @@ public class Display extends PApplet {
         this.pg.background(0);
 
         this.pg.textSize(18);
-        this.pg.fill(color(255, 0, 200));
-        this.pg.text("Version 0.1.7 - Purple", 0, 20);
+        this.pg.fill(color(21, 176, 26));
+        this.pg.text("Version 0.1.7.1 - Green", 0, 20);
         this.pg.fill(color(255, 255, 255));
         this.pg.text("Position: ", text_offset, 20);
         this.pg.text("Lick Count: ", text_offset, 40);
@@ -306,8 +306,8 @@ public class Display extends PApplet {
         app.background(0);
 
         app.textSize(18);
-        app.fill(color(255, 0, 200));
-        app.text("Version 0.1.7 - Purple", 0, 20);
+        app.fill(color(21, 176, 26));
+        app.text("Version 0.1.7.1 - Green", 0, 20);
         app.fill(color(255, 255, 255));
         app.text("Position: ", text_offset, 20);
         app.text("Lick Count: ", text_offset, 40);

@@ -306,6 +306,12 @@ public class TreadmillController extends PApplet {
     ArrayList<ContextList> contexts;
 
     /**
+     * For Debug mode
+     */
+    boolean debug = false;
+    CommentsBox commentsBox;
+
+    /**
      * Constructor for the treadmill controller object.
      *
      * @param settings_string JSON formatted string containing experiment
@@ -1616,7 +1622,6 @@ public class TreadmillController extends PApplet {
             return;
         }
 
-        // JJ: DEBUG MODE START #############
         for (int i=0; ((i < 10) && (behavior_comm.receiveMessage(json_buffer)));
                 i++) {
 
@@ -1627,6 +1632,12 @@ public class TreadmillController extends PApplet {
 
             JSONObject behavior_json =
                 json_buffer.json.getJSONObject(behavior_comm.id);
+
+            // Check if it is in debug mode
+            if (debug) {
+                commentsBox.commentArea.setText(commentsBox.commentArea.getText() +
+                    behavior_json.toString() + "\n");
+            }
 
             if (!behavior_json.isNull("lick")) {
                 String action = behavior_json.getJSONObject("lick")

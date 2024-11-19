@@ -1,10 +1,4 @@
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JTextArea;
-import javax.swing.JComboBox;
+import javax.swing.*;
 import java.io.File;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -14,11 +8,6 @@ import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import javax.swing.BoxLayout;
-import javax.swing.Box;
-import javax.swing.UIManager;
-import javax.swing.JOptionPane;
-import javax.swing.SwingConstants;
 import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -1311,7 +1300,16 @@ class CommentsBox extends JPanel implements ActionListener {
 
         commentArea = new JTextArea(5,200);
         nextCommentArea = new JTextArea(5,200);
-        add(commentArea, BorderLayout.CENTER);
+
+        // Add scroll bars to the text area
+        commentArea.setLineWrap(true);
+        commentArea.setWrapStyleWord(true);
+        JScrollPane scrollPane = new JScrollPane(commentArea);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        //setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
 
         add(new JLabel("Comments"), BorderLayout.NORTH);
         nextItem = "next trial";
@@ -1648,7 +1646,19 @@ public class BehaviorMate {
 
         CommentsBox commentsBox = new CommentsBox(treadmillController);
         tl.setCommentsBox(commentsBox);
-        frame_container.add(commentsBox, BorderLayout.SOUTH);
+        if(checkDebugMode()) {
+            // if debug mode is enabled, use commentsBox as debugging purpose
+            commentsBox.commentArea.setEnabled(false);
+            commentsBox.commentArea.setText("Debug Mode");
+            // Enable scroll bar for commentArea
+            JScrollPane scrollPane = new JScrollPane(commentsBox.commentArea);
+            commentsBox.add(scrollPane, BorderLayout.CENTER);
+        }
+
+        treadmillController.debug = checkDebugMode();
+        treadmillController.commentsBox = commentsBox;
+
+                frame_container.add(commentsBox, BorderLayout.SOUTH);
 
         frame.add(frame_container);
 
@@ -1658,6 +1668,23 @@ public class BehaviorMate {
         frame.setVisible(true);
 
         ps.startThread();
+    }
+
+    /**
+     * Check version.json for debug mode
+     */
+    public static boolean checkDebugMode() {
+        try {
+            JSONObject version_json =
+                    BehaviorMate.parseJsonFile("version.json");
+            if (version_json.getBoolean("debug")) {
+                System.out.println("Debug Mode");
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return false;
     }
 
     public static void main(String[] args) {
