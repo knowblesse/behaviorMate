@@ -1783,6 +1783,10 @@ public class TreadmillController extends PApplet {
                 resetArduino(true);
             }
         }
+        else {
+            // if the behavior controller is reconnected, clear the message
+            display.setBottomMessage("");
+        }
 
     }
 

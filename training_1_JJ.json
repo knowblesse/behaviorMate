@@ -1,0 +1,61 @@
+// C++ style '//' comments are permitted to comment out the end of lines
+// but block style i.e. '/*' will not work
+{
+    "run_training": { // name for each profile of in this setting file
+        "controllers": {
+            "behavior_controller": { // address behavior arduino is posting message
+                "ip": "192.168.1.101",   // to
+                //"ip": "127.0.0.1",   // to
+                "send_port": 5000,
+                //"send_port": 4096,
+                "receive_port": 5000
+            },
+            "position_controller": { // address arduino reading rotary encoder is
+                "ip": "192.168.1.102",   // posting messages to
+                "send_port": 5005,
+                "receive_port": 5005
+            },
+        },
+        "reward": {
+            "id": "reward"
+        },
+        "sensors": [
+            {
+               "type": "cap1188",
+               "pin": 3,
+               "sensor": 0,
+               "lights":true,
+               "sensitivity":5,
+               "reset_pin":5
+            }
+        ],
+        "contexts": [
+            {
+                "id": "reward",  
+                "type": "operant", 
+                "valves": [52],
+                "durations": [25],
+                "max_duration":1.5,
+                "radius":50,
+                "initial_open": 0,
+                "operant_rate":1,
+                "sensor":3,
+                "report_pin": 7,
+                "locations":4, 
+                "display_color": [104,204,104]
+            }
+        ],
+        "sync_pin": 23, // a ttl pulse is delivered at the beginning of each
+        "trial_length":12000, // duration (in s) of the trial.
+        "position_scale": -1.8677, // scales the position updates from aritrary
+        "track_length": 1800, // length of the track/treadmill belt.
+        "lap_offset": 0,
+        "position_lap_reset": true,
+        "position_lap_reader": true,
+        "region": "ca1",
+        "experimentType":"",
+    },
+    "_system": {
+        "data_directory":"behaviorData"
+    }
+}
