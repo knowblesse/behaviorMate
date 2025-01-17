@@ -82,10 +82,20 @@ public class TreadmillController extends PApplet {
     UdpClient reset_comm;
 
     /**
+     * vr comm : for internal VR system
+     */
+    UdpClient vr_comm;
+
+    /**
      * Time of last request to reset behavior controller if comms are
      * disconnected
      */
     long last_reset_time;
+
+    /**
+     * Time of last alive signal sent to the behavior controller
+     */
+    long last_alive_signal_time;
 
     //TODO: switch to HashMap and remove separate pointers to position,
     // behavior, and reset controllers
@@ -1020,7 +1030,9 @@ public class TreadmillController extends PApplet {
         position_comm = null;
         behavior_comm = null;
         reset_comm = null;
+        vr_comm = null;
         last_reset_time = 0;
+        last_alive_signal_time = 0;
 
         JSONObject controllers;
         if (!settings_json.isNull("controllers")) {
@@ -1049,6 +1061,8 @@ public class TreadmillController extends PApplet {
                 behavior_comm = comm;
             } else if (comm_key.equals("reset_controller")) {
                 reset_comm = comm;
+            } else if (comm_key.equals("lap_controller")) {
+                vr_comm = comm;
             }
         }
 
@@ -1402,6 +1416,7 @@ public class TreadmillController extends PApplet {
 
         position_comm = null;
         behavior_comm = null;
+        vr_comm = null;
         comms = new ArrayList<UdpClient>();
         prepareExitHandler();
         trialListener.initialized();
@@ -1531,6 +1546,7 @@ public class TreadmillController extends PApplet {
                 }
             }
 
+
             if (!position_json.isNull("position")) {
                 dy += position_json.getJSONObject("position").getFloat("dy", 0);
             } else if (started) {
@@ -1607,6 +1623,14 @@ public class TreadmillController extends PApplet {
             json_buffer.json.setFloat("y", offset_position);
             json_buffer.json.setFloat("time", time);
             fWriter.write(json_buffer.json.toString());
+        }
+
+
+        // if vr is enabled, send position value
+        if (vr_comm != null) { // check if vr is enabled
+            JSONObject current_position_json = new JSONObject();
+            current_position_json.setFloat("position", position);
+            vr_comm.sendMessage(current_position_json.toString());
         }
 
         return dy;
@@ -1772,6 +1796,17 @@ public class TreadmillController extends PApplet {
 
             testComms(false);
             comms_check_time = _millis;
+        }
+
+        // Send a message to the behavior controller to check the connection
+        if (behavior_comm != null) {
+            if (_millis > (last_alive_signal_time + 1000)) {
+                JSONObject alive = new JSONObject();
+                alive.setJSONObject("communicator", new JSONObject());
+                alive.getJSONObject("communicator").setString("action", "alive");
+                behavior_comm.sendMessage(alive.toString());
+                last_alive_signal_time = _millis;
+            }
         }
 
         if (!behavior_comm.getStatus()) {

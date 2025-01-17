@@ -195,8 +195,6 @@ class UdpClient extends PApplet {
         /**
          * ?
          */
-        private DatagramPacket forwardPacket;
-        private int ForwardPort = 9945;
         private ConcurrentLinkedQueue<String> messageQueue;
         //private byte[] receiveData;
         /**
@@ -248,17 +246,7 @@ class UdpClient extends PApplet {
                     receiveData, receiveData.length);
                 try {
                     sock.receive(incomingUdp);
-
-                    if (incomingUdp.getLength() == 0) {
-                        continue;
-                    }
-
-                    forwardPacket = new DatagramPacket(
-                            incomingUdp.getData(), incomingUdp.getLength(), InetAddress.getByName("127.0.0.1"), ForwardPort
-                    );
-                    sock.send(forwardPacket);
                 } catch (IOException e) {
-
                     continue;
                 }
 
