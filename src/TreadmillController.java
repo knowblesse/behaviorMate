@@ -401,24 +401,26 @@ public class TreadmillController extends PApplet {
         test_arduino.getJSONObject("communicator").setString("action", "test");
         behavior_comm.sendMessage(test_arduino.toString());
 
+        // Check the response 50 times, waiting 20 ms between each check
         int i;
         for (i = 0; i<50 && !behavior_comm.receiveMessage(json_buffer); i++) {
             delay(20);
         }
 
+        // If the behavior controller does not respond, alert the user
         if (i == 50) {
             if (alert) {
                 trialListener.alert("Failed to connect to behavior controller");
             }
             behavior_comm.setStatus(false);
-            comms_check_interval = 10000;
+            comms_check_interval = 2000;
             loop();
             delay(100);
             return false;
         } else {
             display.setBottomMessage("");
             behavior_comm.setStatus(true);
-            comms_check_interval = 60000;
+            comms_check_interval = 2000;
             loop();
             delay(100);
             return true;
@@ -1383,7 +1385,7 @@ public class TreadmillController extends PApplet {
         started = false;
         belt_calibration_mode = false;
 
-        comms_check_interval = 60000;
+        comms_check_interval = 2000; // check comms every 2 seconds
         comms_check_time = 0;
 
         current_calibration = 0;
