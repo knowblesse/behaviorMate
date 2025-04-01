@@ -92,11 +92,6 @@ public class TreadmillController extends PApplet {
      */
     long last_reset_time;
 
-    /**
-     * Time of last alive signal sent to the behavior controller
-     */
-    long last_alive_signal_time;
-
     //TODO: switch to HashMap and remove separate pointers to position,
     // behavior, and reset controllers
     /**
@@ -1032,7 +1027,6 @@ public class TreadmillController extends PApplet {
         reset_comm = null;
         vr_comm = null;
         last_reset_time = 0;
-        last_alive_signal_time = 0;
 
         JSONObject controllers;
         if (!settings_json.isNull("controllers")) {
@@ -1798,31 +1792,9 @@ public class TreadmillController extends PApplet {
             comms_check_time = _millis;
         }
 
-        // Send a message to the behavior controller to check the connection
-        if (behavior_comm != null) {
-            if (_millis > (last_alive_signal_time + 1000)) {
-                JSONObject alive = new JSONObject();
-                alive.setJSONObject("communicator", new JSONObject());
-                alive.getJSONObject("communicator").setString("action", "alive");
-                behavior_comm.sendMessage(alive.toString());
-                last_alive_signal_time = _millis;
-            }
-        }
-
         if (!behavior_comm.getStatus()) {
             display.setBottomMessage("Behavior Controller Disconnected");
-
-            if (_millis > (last_reset_time + 3000))
-            {
-                last_reset_time = _millis;
-                resetArduino(true);
-            }
         }
-        else {
-            // if the behavior controller is reconnected, clear the message
-            display.setBottomMessage("");
-        }
-
     }
 
     /**
