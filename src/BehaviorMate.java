@@ -966,10 +966,6 @@ class ControlPanel extends JPanel implements ActionListener {
             showAttrsButton.setEnabled(false);
             calibrateBeltForm.setEnabled(false);
             startButton.setText("Stop");
-            rewardNumberBox.setEnabled(false);
-            rewardNumberBox.getButton().setEnabled(false);
-            trialLengthBox.setEnabled(false);
-            trialLengthBox.getButton().setEnabled(false);
         } else {
             startButton.setText("Start");
             mouseNameBox.setEnabled(true);
@@ -978,10 +974,6 @@ class ControlPanel extends JPanel implements ActionListener {
             showAttrsButton.setEnabled(true);
             refreshButton.setEnabled(true);
             calibrateBeltForm.setEnabled(true);
-            rewardNumberBox.setEnabled(true);
-            rewardNumberBox.getButton().setEnabled(true);
-            trialLengthBox.setEnabled(true);
-            trialLengthBox.getButton().setEnabled(true);
         }
     }
 
