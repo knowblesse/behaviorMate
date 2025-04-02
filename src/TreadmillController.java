@@ -2,7 +2,11 @@ import javax.sound.sampled.*;
 import java.net.*;
 import java.io.*;
 import java.util.Date;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.text.SimpleDateFormat;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -110,6 +114,11 @@ public class TreadmillController extends PApplet {
      * check fails.
      */
     long comms_check_interval;
+
+    /**
+     * Last message time
+     */
+    long last_message_time = Long.MIN_VALUE;
 
     /**
      * Used to show the current state of the trial.
@@ -314,6 +323,7 @@ public class TreadmillController extends PApplet {
      * For Debug mode
      */
     boolean debug = false;
+    boolean message_mode = false;
     CommentsBox commentsBox;
 
     /**
@@ -412,15 +422,59 @@ public class TreadmillController extends PApplet {
             if (alert) {
                 trialListener.alert("Failed to connect to behavior controller");
             }
+            if (message_mode) {
+                /*
+                 * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                 * Send message to JJ
+                 * >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                 */
+                //check if workday
+                LocalDateTime now = LocalDateTime.now();
+                DayOfWeek day = now.getDayOfWeek();
+                int hour = now.getHour();
+
+                boolean workday = (day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY)
+                        && (hour >= 9 && hour < 19);
+                long _millis = millis();
+                if (workday && (_millis > last_message_time + 1000*60*60)) {  // every 1hour
+                    last_message_time = _millis;
+                    // send message to JJ
+                    try {
+                        // Get telegram API key from json
+                        org.json.JSONObject version_json = BehaviorMate.parseJsonFile("version.json");
+                        String telegram_api_key = version_json.getString("telegram_key");
+                        String telegram_chat_id = version_json.getString("telegram_chat_id");
+
+                        // Prepare message
+                        String urlString = "https://api.telegram.org/" + telegram_api_key + "/sendMessage?chat_id=" + telegram_chat_id + "&text=Disconnected";
+                        URL url = new URL(urlString);
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("GET");
+                        conn.setConnectTimeout(3000);
+                        conn.setReadTimeout(3000);
+                        conn.connect();
+                        trialListener.alert("Disconnection error has been reported to JJ");
+                        conn.getInputStream();
+                        conn.disconnect();
+                    } catch (Exception e) {
+                        trialListener.alert(e.toString());
+                    }
+                }
+                /*
+                 * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                 * Send message to JJ
+                 * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                 */
+            }
             behavior_comm.setStatus(false);
-            comms_check_interval = 2000;
+            comms_check_interval = 5000;
             loop();
             delay(100);
             return false;
         } else {
             display.setBottomMessage("");
             behavior_comm.setStatus(true);
-            comms_check_interval = 2000;
+            comms_check_interval = 5000;
             loop();
             delay(100);
             return true;
@@ -1385,7 +1439,7 @@ public class TreadmillController extends PApplet {
         started = false;
         belt_calibration_mode = false;
 
-        comms_check_interval = 2000; // check comms every 2 seconds
+        comms_check_interval = 5000; // check comms every 5 seconds
         comms_check_time = 0;
 
         current_calibration = 0;
@@ -1897,6 +1951,8 @@ public class TreadmillController extends PApplet {
         }
 
         resetArduino(true);
+
+        last_message_time = Long.MIN_VALUE;
     }
 
     /**

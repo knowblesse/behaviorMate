@@ -1648,6 +1648,7 @@ public class BehaviorMate {
         }
 
         treadmillController.debug = checkDebugMode();
+        treadmillController.message_mode = checkMessageMode();
         treadmillController.commentsBox = commentsBox;
 
                 frame_container.add(commentsBox, BorderLayout.SOUTH);
@@ -1660,6 +1661,23 @@ public class BehaviorMate {
         frame.setVisible(true);
 
         ps.startThread();
+    }
+
+    /**
+     * Check version.json for message mode
+     */
+    public static boolean checkMessageMode() {
+        try {
+            JSONObject version_json =
+                    BehaviorMate.parseJsonFile("version.json");
+            if (version_json.getBoolean("message")) {
+                System.out.println("Message Mode");
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return false;
     }
 
     /**

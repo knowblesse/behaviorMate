@@ -200,8 +200,8 @@ public class Display extends PApplet {
         this.pg.background(0);
 
         this.pg.textSize(18);
-        this.pg.fill(color(150, 75, 0));
-        this.pg.text("Version 0.1.7.3 - Brown", 0, 20);
+        this.pg.fill(color(255, 192, 203));
+        this.pg.text("Version 0.1.8 - Pink", 0, 20);
         this.pg.fill(color(255, 255, 255));
         this.pg.text("Position: ", text_offset, 20);
         this.pg.text("Lick Count: ", text_offset, 40);
@@ -306,8 +306,8 @@ public class Display extends PApplet {
         app.background(0);
 
         app.textSize(18);
-        app.fill(color(150, 75, 0));
-        app.text("Version 0.1.7.3 - Brown", 0, 20);
+        app.fill(color(255, 192, 203));
+        app.text("Version 0.1.8 - Pink", 0, 20);
         app.fill(color(255, 255, 255));
         app.text("Position: ", text_offset, 20);
         app.text("Lick Count: ", text_offset, 40);
@@ -336,7 +336,8 @@ public class Display extends PApplet {
         app.textSize(18);
 
 
-        if ((lickRate > 0) && (!lickOn)) {
+        //if ((lickRate > 0) && (!lickOn)) {
+        if (lickRate > 0) { // decay lick even if lick off has not been received
             lickRate -= 5;
         }
 
