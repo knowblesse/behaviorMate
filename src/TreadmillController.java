@@ -1840,10 +1840,9 @@ public class TreadmillController extends PApplet {
         }
 
         long _millis = millis();
-        if ((!started) &&
-            (behavior_comm != null) &&
-            (_millis > (comms_check_time + comms_check_interval))) {
-
+        // Check comm status regardless of whether the trial is running or not
+        //if ((!started) && (behavior_comm != null) && (_millis > (comms_check_time + comms_check_interval))) {
+        if ((behavior_comm != null) && (_millis > (comms_check_time + comms_check_interval))) {
             testComms(false);
             comms_check_time = _millis;
         }
@@ -1887,7 +1886,6 @@ public class TreadmillController extends PApplet {
             if ((c != behavior_comm) && (c != position_comm)) {
                 checkMessages(c, time);
             }
-
         }
 
         int t = millis();
